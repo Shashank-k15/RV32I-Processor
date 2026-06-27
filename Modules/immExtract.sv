@@ -15,10 +15,11 @@ always_comb begin
     immediate = 32'b0;
     
     case(instruction[6:0])
-        I_type_opcode_alu, I_type_opcode_jump, I_type_opcode_load : begin
-            logic [2:0] funct3 = instruction[14:12];
+        I_type_opcode_alu : begin
+            logic [2:0] funct3;
+            funct3 = instruction[14:12];
             case(funct3)
-            // for slli and srli instructions
+            // for slli, srli, srai instructions only
                 3'b001, 3'b101: begin
                     immediate = { 27'b0, instruction[24:20] };
                 end
@@ -26,6 +27,11 @@ always_comb begin
                     immediate = { {20{instruction[31]}}, instruction[31:20] };
                 end
             endcase
+        end
+
+        // Loads and JALR always use the full 12-bit sign-extended immediate
+        I_type_opcode_load, I_type_opcode_jump : begin
+            immediate = { {20{instruction[31]}}, instruction[31:20] };
         end
 
         S_type_opcode :begin
